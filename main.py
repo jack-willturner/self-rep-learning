@@ -26,14 +26,11 @@ def get_representations(rep, train=True):
     X_ = []
     y_ = []
 
-    dim = 0
     for i, (input, target) in enumerate(dataloader):
         output = rep(input)
 
         X_.append(output.detach().view(output.size(0), -1))
         y_.append(target.detach())
-        dim = i
-
 
     X_ = [item for sublist in X_ for item in sublist]
     X = torch.stack(X_).numpy()
