@@ -17,20 +17,28 @@ def rotate(input):
     rotation_labels = torch.LongTensor([0,1,2,3])
     return rotated_imgs, rotation_labels
 
-def get_representations(rep):
+def get_representations(rep, train=True):
+    if train:
+        dataloader = trainloader
+    else:
+        dataloader = valloader
+
     X_ = []
     y_ = []
 
     dim = 0
-    for i, (input, target) in enumerate(trainloader):
+    for i, (input, target) in enumerate(dataloader):
         output = rep(input)
 
-        X_.append(output)
-        y_.append(target)
+        X_.append(output.detach().view(output.size(0), -1))
+        y_.append(target.detach())
         dim = i
 
+
+    X_ = [item for sublist in X_ for item in sublist]
     X = torch.stack(X_).numpy()
-    y = torch.stack(y_).numpy()
+    y = torch.stack(y_).numpy().flatten()
+
     return X, y
 
 
@@ -69,7 +77,7 @@ if __name__ == '__main__':
     trainloader, valloader = get_data_loaders()
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD([v for v in model.parameters() if v.requires_grad],lr=0.1)
-    epochs = 0
+    epochs = 5
     t = trange(epochs, desc='error', leave=True)
     for epoch in t:
         t.set_description('error = %d' % best_err)
@@ -82,5 +90,8 @@ if __name__ == '__main__':
     rep.eval()
 
     # iterate over CIFAR and compile the new dataset
-    X, y = get_representations(rep)
-    linear_classifier = LogisticRegression(solver='lbfgs', multi_class='multinomial').fit(X,y)
+    X_train, y_train  = get_representations(rep)
+    X_test, y_test    = get_representations(rep, train=False)
+    linear_classifier = LogisticRegression(solver='lbfgs', multi_class='multinomial').fit(X_train,y_train)
+    test_acc          = linear_classifier.score(X_test, y_test)
+    print("Accuracy: ", test_acc)
