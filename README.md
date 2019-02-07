@@ -5,6 +5,13 @@ PyTorch replication of papers studied in [this paper](https://arxiv.org/abs/1901
 
 More models and experiments coming soon...  
 
+For now:
+- [Tensorflow implementation](https://github.com/google/revisiting-self-supervised)
+- [PyTorch: Unsupervised Representation Learning by Predicting Image Rotations](https://github.com/gidariss/FeatureLearningRotNet)
+- [Caffe: Unsupervised Representation Learning By Context Prediction](https://github.com/cdoersch/deepcontext)
+- [PyTorch: Unsupervised Learning of Visual Representations by Solving Jigsaw Puzzles](https://github.com/bbrattoli/JigsawPuzzlePytorch)
+- [Caffe: Discriminative Unsupervised Feature Learning with Exemplar Convolutional Neural Networks](https://github.com/yihui-he/Exemplar-CNN)
+
 ## Acknowledgements
 Code liberally borrowed from:
 - [https://github.com/jhjacobsen/pytorch-i-revnet](https://github.com/jhjacobsen/pytorch-i-revnet)
