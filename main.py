@@ -1,8 +1,10 @@
 import torch
 import pandas
+import numpy as np
 from utils import *
 from models import *
-from tqdm import tqdm
+from tqdm import trange
+from sklearn.linear_model import LogisticRegression
 
 best_err = 100.
 
@@ -14,6 +16,22 @@ def rotate(input):
     rotated_imgs = torch.tensor(rotated_imgs)
     rotation_labels = torch.LongTensor([0,1,2,3])
     return rotated_imgs, rotation_labels
+
+def get_representations(rep):
+    X_ = []
+    y_ = []
+
+    dim = 0
+    for i, (input, target) in enumerate(trainloader):
+        output = rep(input)
+
+        X_.append(output)
+        y_.append(target)
+        dim = i
+
+    X = torch.stack(X_).numpy()
+    y = torch.stack(y_).numpy()
+    return X, y
 
 
 def train_test_pretext(train=True):
@@ -47,17 +65,22 @@ def train_test_pretext(train=True):
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     #dataframe = pd.DataFrame(columns=['epoch','loss','top1','top5'])
-    model = LeNet()
+    model = ResNet3()
     trainloader, valloader = get_data_loaders()
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD([v for v in model.parameters() if v.requires_grad],lr=0.001)
-    epochs = 5
-    for epoch in tqdm(range(epochs)):
+    optimizer = torch.optim.SGD([v for v in model.parameters() if v.requires_grad],lr=0.1)
+    epochs = 0
+    t = trange(epochs, desc='error', leave=True)
+    for epoch in t:
+        t.set_description('error = %d' % best_err)
+        t.refresh()
         train_test_pretext()
         train_test_pretext(train=False)
 
-    print(best_err)
-
     # fetch and freeze the first two blocks
+    rep = nn.Sequential(model.layer1, model.layer2)
+    rep.eval()
 
-    # plop some linear layers on the end
+    # iterate over CIFAR and compile the new dataset
+    X, y = get_representations(rep)
+    linear_classifier = LogisticRegression(solver='lbfgs', multi_class='multinomial').fit(X,y)
